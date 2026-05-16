@@ -1,6 +1,6 @@
-# soul_metrics_client
+# SoulMetrics
 
-A new Flutter project.
+Flutter application which integrates RF to diagnose user's personality
 
 ## Getting Started
 
