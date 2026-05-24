@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
-import '../../../home/presentation/views/home_screen.dart';
+import '../../../main/presentation/views/main_layout_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -136,7 +136,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 if (!context.mounted) return;
                                 Navigator.pushReplacement(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                                  MaterialPageRoute(builder: (context) => const MainLayoutScreen()),
                                 );
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(

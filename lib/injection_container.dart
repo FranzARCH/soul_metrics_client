@@ -1,6 +1,5 @@
 import 'package:get_it/get_it.dart';
 
-// Importa todas tus capas de Auth
 import 'features/auth/data/datasources/user_mock.dart';
 import 'features/auth/data/repositories/auth_repository.dart';
 import 'features/auth/domain/repositories/iauth_repository.dart';
