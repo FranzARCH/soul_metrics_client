@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// Asegúrate de importar la pantalla del cuestionario correctamente según tu estructura de carpetas
+import '../../../personality_test/presentation/views/question_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -19,7 +21,7 @@ class HomeScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Welcome Section
-                Text('Hola, Alex', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: primaryColor)),
+                Text('Hola, Sofía', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: primaryColor)),
                 const SizedBox(height: 8),
                 const Text(
                   'Hoy es un buen día para profundizar en tu autoconocimiento. Tu última sesión mostró un crecimiento notable en resiliencia.',
@@ -51,8 +53,16 @@ class HomeScreen extends StatelessWidget {
                       Text('Nuestro test de 5 minutos te ayudará a identificar patrones de pensamiento y áreas de oportunidad para esta semana.', 
                         style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.9))),
                       const SizedBox(height: 24),
+                      
+                      // BOTÓN ACTUALIZADO CON LA REDIRECCIÓN
                       ElevatedButton.icon(
-                        onPressed: () {},
+                        onPressed: () {
+                          // Navega a la pantalla del cuestionario
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const QuestionScreen()),
+                          );
+                        },
                         icon: const Icon(Icons.arrow_forward, size: 18),
                         label: const Text('Iniciar Evaluación'),
                         style: ElevatedButton.styleFrom(

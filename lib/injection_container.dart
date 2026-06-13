@@ -1,5 +1,10 @@
 import 'package:get_it/get_it.dart';
-
+import 'package:soul_metrics_client/features/personality_test/data/datasources/test_mock.dart';
+import 'package:soul_metrics_client/features/personality_test/data/repositories/test_repository.dart';
+import 'package:soul_metrics_client/features/personality_test/domain/repositories/itest_repository.dart';
+import 'package:soul_metrics_client/features/personality_test/domain/usecases/get_questions_usecase.dart';
+import 'package:soul_metrics_client/features/personality_test/domain/usecases/submit_assessment_usecase.dart';
+import 'package:soul_metrics_client/features/personality_test/presentation/viewmodels/question_viewmodel.dart';
 import 'features/auth/data/datasources/user_mock.dart';
 import 'features/auth/data/repositories/auth_repository.dart';
 import 'features/auth/domain/repositories/iauth_repository.dart';
@@ -22,5 +27,21 @@ void setupLocator() {
   locator.registerFactory(() => AuthViewModel(
     loginUseCase: locator(),
     registerUseCase: locator(),
+  ));
+
+  // 1. Data Source del Cuestionario
+  locator.registerLazySingleton<TestMockDataSource>(() => TestMockDataSource());
+
+  // 2. Repositorio del Cuestionario 
+  locator.registerLazySingleton<ITestRepository>(() => TestRepositoryImpl(locator()));
+
+  // 3. Casos de Uso
+  locator.registerLazySingleton(() => GetQuestionsUseCase(locator()));
+  locator.registerLazySingleton(() => SubmitAssessmentUseCase(locator()));
+
+  // 4. ViewModel (Factory para limpiar respuestas al iniciar un nuevo test)
+  locator.registerFactory(() => QuestionViewModel(
+        getQuestionsUseCase: locator(),
+        submitAssessmentUseCase: locator(),
   ));
 }

@@ -26,7 +26,7 @@ class ProfileScreen extends StatelessWidget {
                   const Stack(
                     alignment: Alignment.bottomRight,
                     children: [
-                      CircleAvatar(radius: 48, backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=68')),
+                      CircleAvatar(radius: 48, backgroundImage: AssetImage('assets/cinna.png')),
                       CircleAvatar(
                         radius: 16,
                         backgroundColor: Color(0xFF142175),
@@ -35,9 +35,9 @@ class ProfileScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Text('Dra. Elena Rodríguez', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: primaryColor)),
+                  Text('Sofía Sarmiento', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: primaryColor)),
                   const SizedBox(height: 4),
-                  const Text('elena.rodriguez@psico.com', style: TextStyle(color: Color(0xFF454651))),
+                  const Text('sofi@soulmetrics.com', style: TextStyle(color: Color(0xFF454651))),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -47,7 +47,7 @@ class ProfileScreen extends StatelessWidget {
                       children: [
                         Icon(Icons.calendar_today, size: 14, color: Color(0xFF1b3129)),
                         SizedBox(width: 8),
-                        Text('MIEMBRO DESDE: ENE 2024', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                        Text('MIEMBRO DESDE: JUN 2026', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                       ],
                     ),
                   )
@@ -68,11 +68,11 @@ class ProfileScreen extends StatelessWidget {
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
               child: Column(
                 children: [
-                  _buildListTile(Icons.person, 'Nombre Completo', 'Elena Rodríguez Sanz'),
+                  _buildListTile(Icons.person, 'Nombre Completo', 'Sofía Sarmiento'),
                   const Divider(height: 1),
-                  _buildListTile(Icons.cake, 'Edad', '32 años'),
+                  _buildListTile(Icons.cake, 'Edad', '21 años'),
                   const Divider(height: 1),
-                  _buildListTile(Icons.work, 'Ocupación', 'Psicóloga Clínica'),
+                  _buildListTile(Icons.work, 'Ocupación', 'Estudiante de Psicología'),
                 ],
               ),
             ),

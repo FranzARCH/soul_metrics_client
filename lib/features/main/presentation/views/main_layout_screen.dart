@@ -44,7 +44,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
             padding: EdgeInsets.only(right: 24.0),
             child: CircleAvatar(
               radius: 18,
-              backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=68'),
+              backgroundImage: const AssetImage('assets/cinna.png'),
               backgroundColor: Colors.grey,
             ),
           )

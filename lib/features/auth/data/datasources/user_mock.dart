@@ -6,10 +6,10 @@ class AuthMockDataSource {
   final List<Map<String, dynamic>> _usersDb = [
     {
       'id': 1,
-      'username': 'admin_soul',
-      'first_name': 'Alejandro',
-      'last_name': 'Martínez',
-      'email': 'admin@soulmetrics.com',
+      'username': 'sofi-sarmiento',
+      'first_name': 'Sofía',
+      'last_name': 'Sarmiento',
+      'email': 'sofi@soulmetrics.com',
       'password': 'password123',
       'is_active': true,
     }
