@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:soul_metrics_client/features/personality_test/domain/entities/prediction_result.dart';
 import '../viewmodels/question_viewmodel.dart';
+import 'results_screen.dart';
 
 class QuestionScreen extends StatefulWidget {
   const QuestionScreen({super.key});
@@ -17,7 +17,6 @@ class _QuestionScreenState extends State<QuestionScreen> {
   @override
   void initState() {
     super.initState();
-    // Carga las 50 preguntas al renderizar la UI
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<QuestionViewModel>().loadQuestions();
     });
@@ -54,7 +53,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
       body: viewModel.isLoading && viewModel.questions.isEmpty
           ? const Center(child: CircularProgressIndicator())
           : viewModel.error != null
-              ? Center(child: Text('Error: ${viewModel.error}'))
+              ? Center(child: Text('Error: ${viewModel.error}', style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)))
               : _buildQuestionnaireContent(viewModel),
     );
   }
@@ -65,8 +64,6 @@ class _QuestionScreenState extends State<QuestionScreen> {
     final currentQuestion = viewModel.questions[viewModel.currentIndex];
     final progressFraction = (viewModel.currentIndex + 1) / viewModel.questions.length;
     final progressPercentage = (progressFraction * 100).toInt();
-
-    // Comprueba si la pregunta actual ya fue respondida en el estado local
     final selectedValue = viewModel.answers[currentQuestion.code];
 
     return SingleChildScrollView(
@@ -76,7 +73,6 @@ class _QuestionScreenState extends State<QuestionScreen> {
           constraints: const BoxConstraints(maxWidth: 680),
           child: Column(
             children: [
-              // Barra de Progreso Dinámica
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -97,7 +93,6 @@ class _QuestionScreenState extends State<QuestionScreen> {
               ),
               const SizedBox(height: 32),
 
-              // Tarjeta de la Pregunta (Traducción exacta de tu HTML)
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(32),
@@ -119,7 +114,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        currentQuestion.category.toUpperCase(),
+                        'RASGO: ${currentQuestion.category.toUpperCase()}',
                         style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Color(0xFF091f19)),
                       ),
                     ),
@@ -130,28 +125,22 @@ class _QuestionScreenState extends State<QuestionScreen> {
                     ),
                     const SizedBox(height: 40),
 
-                    // Escala Likert de 5 puntos interactiva
-                    Column(
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLikertItem(1, 'Totalmente en desacuerdo', selectedValue, viewModel),
-                            _buildLikertItem(2, 'En desacuerdo', selectedValue, viewModel),
-                            _buildLikertItem(3, 'Neutral', selectedValue, viewModel),
-                            _buildLikertItem(4, 'De acuerdo', selectedValue, viewModel),
-                            _buildLikertItem(5, 'Totalmente de acuerdo', selectedValue, viewModel),
-                          ],
-                        ),
+                        _buildLikertItem(1, 'Totalmente en desacuerdo', selectedValue, viewModel),
+                        _buildLikertItem(2, 'En desacuerdo', selectedValue, viewModel),
+                        _buildLikertItem(3, 'Neutral', selectedValue, viewModel),
+                        _buildLikertItem(4, 'De acuerdo', selectedValue, viewModel),
+                        _buildLikertItem(5, 'Totalmente de acuerdo', selectedValue, viewModel),
                       ],
-                    )
+                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 32),
 
-              // Botones de Navegación del cuestionario
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -168,22 +157,22 @@ class _QuestionScreenState extends State<QuestionScreen> {
                   ),
                   ElevatedButton(
                     onPressed: selectedValue == null
-                        ? null // Bloqueado si no se ha marcado respuesta
+                        ? null
                         : () async {
                             if (viewModel.currentIndex < viewModel.questions.length - 1) {
                               viewModel.nextQuestion();
                             } else {
-                              // Si es la última pregunta (50), envía todo al backend simulado
                               _showProcessingDialog(context);
                               final success = await viewModel.sendAssessment();
                               if (!mounted) return;
-                              Navigator.pop(context); // Cierra modal de carga
+                              Navigator.pop(context); // Cierra cargando
 
-                              if (success) {
-                                _showResultPopup(context, viewModel.result!);
+                              if (success && viewModel.result != null) {
+                                // 🚀 REQUERIMIENTO: Mostrar modal con el diagnóstico inmediato del último quiz
+                                _showImmediateResultModal(context, viewModel.result!);
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(viewModel.error ?? 'Error al procesar')),
+                                  SnackBar(content: Text(viewModel.error ?? 'Error al procesar el test')),
                                 );
                               }
                             }
@@ -266,37 +255,45 @@ class _QuestionScreenState extends State<QuestionScreen> {
     );
   }
 
-  void _showResultPopup(BuildContext context, PredictionResult result) {
+  void _showImmediateResultModal(BuildContext context, dynamic result) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+      barrierDismissible: false,
+      builder: (modalContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Row(
           children: [
-            Icon(Icons.analytics, color: Color(0xFF142175)),
-            SizedBox(width: 8),
-            Text('Análisis Completado'),
+            Icon(Icons.analytics, color: primaryColor, size: 28),
+            const SizedBox(width: 10),
+            const Text('Diagnóstico Inmediato', style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Resultado numérico: ${result.personalityPrediction.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text('Diagnóstico: ${result.personalityType}', style: const TextStyle(fontSize: 18, color: Color(0xFF5a55a2), fontWeight: FontWeight.bold)),
+            Text(
+              'Test guardado',
+              style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
+            ),
             const SizedBox(height: 12),
-            Text(result.message),
+            Text(
+              result.message.isNotEmpty ? result.message : 'Tus respuestas han sido procesadas con éxito',
+              style: const TextStyle(fontSize: 15, height: 1.4),
+            ),
           ],
         ),
         actions: [
-          TextButton(
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF142175)),
             onPressed: () {
-              Navigator.pop(context); // Cierra popup
-              Navigator.pop(context); // Regresa al Layout Principal
+              Navigator.pop(modalContext); // 1. Cierra el modal de diagnóstico
+              Navigator.pop(context);      // 2. Cierra el QuestionScreen regresando al Layout de Pestañas
+              
+              // context.read<NavigationProvider>().setIndex(1); // Índice donde se ubique tu pestaña de resultados
             },
-            child: const Text('Entendido'),
-          )
+            child: const Text('Volver al inicio'),
+          ),
         ],
       ),
     );

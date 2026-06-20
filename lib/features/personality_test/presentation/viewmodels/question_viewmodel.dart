@@ -1,3 +1,4 @@
+import 'dart:typed_data'; // <-- Clave para reconocer los bytes del PDF sin errores
 import 'package:flutter/material.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/prediction_result.dart';
@@ -16,13 +17,11 @@ class QuestionViewModel extends ChangeNotifier {
   List<Question> questions = [];
   int currentIndex = 0;
   bool isLoading = false;
+  bool isPdfDownloading = false; // <-- Controla el estado de carga del botón del PDF
   String? error;
   PredictionResult? result;
 
-  // Almacenamiento local de respuestas interactivas: { 'EXT1': 4 }
   final Map<String, int> _answers = {};
-  
-  // Control de tiempos transcurridos por pregunta
   final Map<String, int> _responseTimes = {};
   late DateTime _questionStartTime;
 
@@ -35,10 +34,10 @@ class QuestionViewModel extends ChangeNotifier {
 
     try {
       questions = await getQuestionsUseCase();
-      _questionStartTime = DateTime.now(); // Inicia reloj de primera pregunta
+      _questionStartTime = DateTime.now();
       isLoading = false;
     } catch (e) {
-      error = e.toString();
+      error = e.toString().replaceAll('Exception: ', '');
       isLoading = false;
     }
     notifyListeners();
@@ -48,12 +47,9 @@ class QuestionViewModel extends ChangeNotifier {
     if (questions.isEmpty) return;
     
     final currentQuestion = questions[currentIndex];
-    
-    // Calcula tiempo transcurrido en milisegundos para la pregunta actual
     final duration = DateTime.now().difference(_questionStartTime).inMilliseconds;
     _responseTimes[currentQuestion.code] = (_responseTimes[currentQuestion.code] ?? 0) + duration;
 
-    // Registra la respuesta Likert seleccionada
     _answers[currentQuestion.code] = value;
     notifyListeners();
   }
@@ -61,7 +57,7 @@ class QuestionViewModel extends ChangeNotifier {
   void nextQuestion() {
     if (currentIndex < questions.length - 1) {
       currentIndex++;
-      _questionStartTime = DateTime.now(); // Reinicia el cronómetro para la nueva pregunta
+      _questionStartTime = DateTime.now();
       notifyListeners();
     }
   }
@@ -89,6 +85,26 @@ class QuestionViewModel extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
       return false;
+    }
+  }
+
+  // NUEVO: Invoca la descarga binaria real a través del caso de uso / repositorio
+  Future<Uint8List?> exportReportPdf() async {
+    isPdfDownloading = true;
+    error = null;
+    notifyListeners();
+
+    try {
+      // Accede al contrato de descarga acoplado en tu arquitectura limpia
+      final pdfBytes = await submitAssessmentUseCase.repository.downloadPdfDossier();
+      isPdfDownloading = false;
+      notifyListeners();
+      return pdfBytes;
+    } catch (e) {
+      error = e.toString().replaceAll('Exception: ', '');
+      isPdfDownloading = false;
+      notifyListeners();
+      return null;
     }
   }
 }

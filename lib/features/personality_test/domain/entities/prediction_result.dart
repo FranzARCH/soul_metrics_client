@@ -1,13 +1,17 @@
 class PredictionResult {
+  final int id;
   final String status;
-  final double personalityPrediction;
-  final String personalityType;
+  final Map<String, double> personalityPrediction;
+  final Map<String, String> traitDescriptions;
+  final Map<String, dynamic> graphicsData;
   final String message;
 
-  PredictionResult({
+  const PredictionResult({
+    required this.id,
     required this.status,
     required this.personalityPrediction,
-    required this.personalityType,
+    required this.traitDescriptions,
+    required this.graphicsData,
     required this.message,
   });
 }
