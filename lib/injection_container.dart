@@ -1,11 +1,35 @@
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
-import 'package:soul_metrics_client/features/personality_test/data/datasources/test_mock.dart';
-import 'package:soul_metrics_client/features/personality_test/data/repositories/test_repository.dart';
+
+// ==========================================
+// IMPORTS: MÓDULO DE HISTORIAL
+// ==========================================
+import 'package:soul_metrics_client/features/history_results/data/repositories/history_repository.dart'; 
+import 'package:soul_metrics_client/features/history_results/domain/repositories/ihistory_repository.dart';
+import 'package:soul_metrics_client/features/history_results/domain/usecases/get_prediction_history_usecase.dart';
+import 'package:soul_metrics_client/features/history_results/presentation/viewmodels/history_viewmodel.dart';
+
+// ==========================================
+// IMPORTS: MÓDULO DE PROFILE INSIGHTS (NUEVO)
+// ==========================================
+import 'package:soul_metrics_client/features/personality_test/data/repositories/profile_repository.dart';
+import 'package:soul_metrics_client/features/personality_test/domain/repositories/iprofile_repository.dart';
+import 'package:soul_metrics_client/features/personality_test/domain/usecases/get_holistic_profile_usecase.dart';
+import 'package:soul_metrics_client/features/personality_test/presentation/viewmodels/profile_viewmodel.dart';
+
+// ==========================================
+// IMPORTS: MÓDULO DE PERSONALITY TEST
+// ==========================================
+import 'package:soul_metrics_client/features/personality_test/data/datasources/assessment_datasource.dart'; 
+import 'package:soul_metrics_client/features/personality_test/data/repositories/test_repository.dart'; 
 import 'package:soul_metrics_client/features/personality_test/domain/repositories/itest_repository.dart';
 import 'package:soul_metrics_client/features/personality_test/domain/usecases/get_questions_usecase.dart';
 import 'package:soul_metrics_client/features/personality_test/domain/usecases/submit_assessment_usecase.dart';
 import 'package:soul_metrics_client/features/personality_test/presentation/viewmodels/question_viewmodel.dart';
+
+// ==========================================
+// IMPORTS: MÓDULO DE AUTENTICACIÓN
+// ==========================================
 import 'features/auth/data/datasources/auth_api_datasource.dart';
 import 'features/auth/data/repositories/auth_repository.dart';
 import 'features/auth/data/services/auth_token_store.dart';
@@ -21,9 +45,16 @@ import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
 final locator = GetIt.instance;
 
 void setupLocator() {
+  // ==========================================
+  // CORE & EXTERNAL SERVICES
+  // ==========================================
   locator.registerLazySingleton<http.Client>(() => http.Client());
-  locator.registerLazySingleton<AuthApiDataSource>(() => AuthApiDataSource(client: locator()));
   locator.registerLazySingleton<AuthTokenStore>(() => AuthTokenStore());
+
+  // ==========================================
+  // AUTH MODULE
+  // ==========================================
+  locator.registerLazySingleton<AuthApiDataSource>(() => AuthApiDataSource(client: locator()));
 
   locator.registerLazySingleton<IAuthRepository>(
     () => AuthRepository(locator(), locator()),
@@ -45,19 +76,51 @@ void setupLocator() {
     restoreSessionUseCase: locator(),
   ));
 
-  // 1. Data Source del Cuestionario
-  locator.registerLazySingleton<TestMockDataSource>(() => TestMockDataSource());
+  // ==========================================
+  // PERSONALITY TEST MODULE (Django REST API)
+  // ==========================================
+  locator.registerLazySingleton<AssessmentApiDataSource>(
+    () => AssessmentApiDataSource(client: locator()),
+  );
 
-  // 2. Repositorio del Cuestionario 
-  locator.registerLazySingleton<ITestRepository>(() => TestRepositoryImpl(locator()));
+  locator.registerLazySingleton<ITestRepository>(
+    () => TestRepositoryImpl(
+      dataSource: locator(),
+      tokenStore: locator<AuthTokenStore>(),
+    ),
+  );
 
-  // 3. Casos de Uso
   locator.registerLazySingleton(() => GetQuestionsUseCase(locator()));
   locator.registerLazySingleton(() => SubmitAssessmentUseCase(locator()));
 
-  // 4. ViewModel (Factory para limpiar respuestas al iniciar un nuevo test)
   locator.registerFactory(() => QuestionViewModel(
         getQuestionsUseCase: locator(),
         submitAssessmentUseCase: locator(),
   ));
+
+  // ==========================================
+  // HISTORY MODULE
+  // ==========================================
+  locator.registerLazySingleton<IHistoryRepository>(
+    () => HistoryRepositoryImpl(
+      client: locator(), 
+      tokenStore: locator(),
+    ),
+  );
+
+  locator.registerLazySingleton(() => GetPredictionHistoryUseCase(locator()));
+  locator.registerFactory(() => HistoryViewModel(getPredictionHistoryUseCase: locator()));
+
+  // ==========================================
+  // PERSONALITY PROFILE INSIGHTS MODULE
+  // ==========================================
+  locator.registerLazySingleton<IProfileRepository>(
+    () => ProfileRepositoryImpl(
+      client: locator(), 
+      tokenStore: locator(),
+    ),
+  );
+
+  locator.registerLazySingleton(() => GetHolisticProfileUseCase(locator()));
+  locator.registerFactory(() => ProfileViewModel(getHolisticProfileUseCase: locator()));
 }

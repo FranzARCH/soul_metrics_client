@@ -12,7 +12,7 @@ class AuthApiDataSource {
 
   AuthApiDataSource({
     required this.client,
-    this.baseUrl = 'https://soulmetrics.onrender.com',
+    this.baseUrl = 'http://localhost:8002',
   });
 
   Future<Map<String, dynamic>> register(RegisterDto request) async {

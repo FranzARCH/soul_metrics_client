@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:soul_metrics_client/features/history_results/presentation/viewmodels/history_viewmodel.dart';
+import 'package:soul_metrics_client/features/personality_test/presentation/viewmodels/profile_viewmodel.dart';
 import 'package:soul_metrics_client/features/personality_test/presentation/viewmodels/question_viewmodel.dart';
 import 'injection_container.dart';
 import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
@@ -13,6 +15,8 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => locator<AuthViewModel>()),
         ChangeNotifierProvider(create: (_) => locator<QuestionViewModel>()),
+        ChangeNotifierProvider(create: (_) => locator<HistoryViewModel>()),
+        ChangeNotifierProvider(create: (_) => locator<ProfileViewModel>()),
       ],
       child: const SoulMetricsApp(),
     ),
