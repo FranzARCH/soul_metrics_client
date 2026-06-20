@@ -6,10 +6,10 @@ class RegisterUseCase {
 
   RegisterUseCase(this.repository);
 
-  Future<User> call(String username, String firstName, String lastName, String email, String password) {
-    if (username.isEmpty || email.isEmpty || password.length < 8) {
+  Future<User> call(String username, String email, String password, int age, String occupation) {
+    if (username.isEmpty || email.isEmpty || password.length < 8 || age <= 0 || occupation.isEmpty) {
       throw Exception('Datos inválidos. La contraseña debe tener al menos 8 caracteres.');
     }
-    return repository.register(username, firstName, lastName, email, password);
+    return repository.register(username, email, password, age, occupation);
   }
 }

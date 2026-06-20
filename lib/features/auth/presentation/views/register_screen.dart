@@ -13,9 +13,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final _usernameController = TextEditingController();
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _occupationController = TextEditingController();
   final _passwordController = TextEditingController();
   
   bool _obscurePassword = true;
@@ -27,9 +27,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _usernameController.dispose();
-    _firstNameController.dispose();
-    _lastNameController.dispose();
     _emailController.dispose();
+    _ageController.dispose();
+    _occupationController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -56,37 +56,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFC6C5D3).withOpacity(0.3)),
+                    border: Border.all(color: const Color(0xFFC6C5D3).withValues(alpha: 0.3)),
                   ),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildTextField(
-                                label: 'Nombre(s)', 
-                                controller: _firstNameController, 
-                                icon: Icons.person_outline, 
-                                hint: 'Alejandro',
-                                validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
-                              )
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: _buildTextField(
-                                label: 'Apellidos', 
-                                controller: _lastNameController, 
-                                icon: Icons.person_outline, 
-                                hint: 'Martínez',
-                                validator: (val) => val == null || val.isEmpty ? 'Requerido' : null,
-                              )
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
                         _buildTextField(
                           label: 'Nombre de usuario', 
                           controller: _usernameController, 
@@ -107,6 +83,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             }
                             return null;
                           },
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildTextField(
+                                label: 'Edad',
+                                controller: _ageController,
+                                icon: Icons.cake_outlined,
+                                hint: '21',
+                                keyboardType: TextInputType.number,
+                                validator: (val) {
+                                  final age = int.tryParse(val ?? '');
+                                  if (age == null || age <= 0) return 'Edad inválida';
+                                  return null;
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildTextField(
+                                label: 'Ocupación',
+                                controller: _occupationController,
+                                icon: Icons.work_outline,
+                                hint: 'Estudiante',
+                                validator: (val) => val == null || val.trim().isEmpty ? 'Requerido' : null,
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 16),
                         
@@ -153,10 +158,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               final viewModel = context.read<AuthViewModel>();
                               final success = await viewModel.register(
                                 _usernameController.text.trim(),
-                                _firstNameController.text.trim(),
-                                _lastNameController.text.trim(),
                                 _emailController.text.trim(),
                                 _passwordController.text,
+                                int.parse(_ageController.text.trim()),
+                                _occupationController.text.trim(),
                               );
                               
                               if (!context.mounted) return;
@@ -165,8 +170,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               if (success) {
                                 Navigator.pop(context);
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('¡Cuenta creada con éxito! Por favor inicia sesión.'),
+                                  SnackBar(
+                                    content: Text('¡Cuenta creada con éxito! Tu nombre de usuario es ${_usernameController.text.trim()}. Ahora inicia sesión con ese nombre de usuario.'),
                                     backgroundColor: Colors.green,
                                     behavior: SnackBarBehavior.floating,
                                   ),
@@ -220,6 +225,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required TextEditingController controller, 
     required IconData icon, 
     required String hint,
+    TextInputType keyboardType = TextInputType.text,
     required String? Function(String?) validator,
   }) {
     return Column(
@@ -229,6 +235,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
+          keyboardType: keyboardType,
           validator: validator,
           decoration: InputDecoration(
             hintText: hint,

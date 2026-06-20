@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:soul_metrics_client/features/personality_test/presentation/viewmodels/question_viewmodel.dart';
 import 'injection_container.dart';
 import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
-import 'features/auth/presentation/views/login_screen.dart';
+import 'features/auth/presentation/views/auth_gate.dart';
 
 void main() {
   setupLocator(); 
@@ -32,7 +32,7 @@ class SoulMetricsApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF142175)),
         useMaterial3: true,
       ),
-      home: const LoginScreen(), 
+      home: const AuthGate(), 
     );
   }
 }

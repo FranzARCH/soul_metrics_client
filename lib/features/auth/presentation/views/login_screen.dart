@@ -50,7 +50,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFC6C5D3).withOpacity(0.3)),
+                    border: Border.all(color: const Color(0xFFC6C5D3).withValues(alpha: 0.3)),
                   ),
                   child: Form(
                     key: _formKey,
@@ -58,13 +58,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         _buildTextField(
-                          label: 'Usuario o Correo electrónico',
+                          label: 'Nombre de usuario',
                           controller: _usernameController,
                           icon: Icons.person_outline,
-                          hint: 'nombre@ejemplo.com o admin_user',
+                          hint: 'admin_user',
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Por favor ingresa tu usuario o correo';
+                              return 'Por favor ingresa tu nombre de usuario';
+                            }
+                            if (value.contains('@')) {
+                              return 'El backend de autenticación usa nombre de usuario, no correo';
                             }
                             return null;
                           },

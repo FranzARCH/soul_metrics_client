@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../../../auth/presentation/views/login_screen.dart';
 import '../../../main/presentation/views/home_screen.dart';
 import '../../../personality_test/presentation/views/results_screen.dart';
 import '../../../history_results/presentation/views/history_screen.dart';
@@ -26,6 +29,19 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authVm = context.watch<AuthViewModel>();
+
+    if (!authVm.isBootstrapping && !authVm.isAuthenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      });
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       // Top bar
@@ -44,7 +60,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
             padding: EdgeInsets.only(right: 24.0),
             child: CircleAvatar(
               radius: 18,
-              backgroundImage: const AssetImage('assets/cinna.png'),
+              backgroundImage: AssetImage('assets/cinna.png'),
               backgroundColor: Colors.grey,
             ),
           )
@@ -52,7 +68,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
         // Línea sutil debajo del AppBar
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
-          child: Container(color: const Color(0xFFC6C5D3).withOpacity(0.3), height: 1.0),
+          child: Container(color: const Color(0xFFC6C5D3).withValues(alpha: 0.3), height: 1.0),
         ),
       ),
       
@@ -67,7 +83,7 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
         decoration: BoxDecoration(
           boxShadow: [
             BoxShadow(
-              color: primaryColor.withOpacity(0.05),
+              color: primaryColor.withValues(alpha: 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             )

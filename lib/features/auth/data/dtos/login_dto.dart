@@ -1,12 +1,12 @@
 class LoginDto {
-  final String username;
+  final String usernameOrEmail;
   final String password;
 
-  LoginDto({required this.username, required this.password});
+  LoginDto({required this.usernameOrEmail, required this.password});
 
   Map<String, dynamic> toJson() {
     return {
-      'username': username,
+      'username': usernameOrEmail,
       'password': password,
     };
   }

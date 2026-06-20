@@ -7,9 +7,9 @@ class AuthMockDataSource {
     {
       'id': 1,
       'username': 'sofi-sarmiento',
-      'first_name': 'Sofía',
-      'last_name': 'Sarmiento',
       'email': 'sofi@soulmetrics.com',
+      'age': 21,
+      'occupation': 'Estudiante de Psicologia',
       'password': 'password123',
       'is_active': true,
     }
@@ -19,7 +19,7 @@ class AuthMockDataSource {
     await Future.delayed(const Duration(seconds: 1)); 
 
     final user = _usersDb.where((u) => 
-      (u['username'] == request.username || u['email'] == request.username) && 
+      (u['username'] == request.usernameOrEmail || u['email'] == request.usernameOrEmail) && 
       u['password'] == request.password
     ).toList();
 
@@ -42,9 +42,9 @@ class AuthMockDataSource {
     final newUser = {
       'id': _usersDb.length + 1,
       'username': request.username,
-      'first_name': request.firstName,
-      'last_name': request.lastName,
       'email': request.email,
+      'age': request.age,
+      'occupation': request.occupation,
       'password': request.password, 
       'is_active': true,
     };

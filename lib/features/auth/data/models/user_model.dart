@@ -4,19 +4,22 @@ class UserModel extends User {
   UserModel({
     required super.id,
     required super.username,
-    required super.firstName,
-    required super.lastName,
     required super.email,
+    super.age,
+    super.occupation,
     required super.isActive,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    final ageValue = json['age'] ?? json['edad'];
+    final occupationValue = json['occupation'] ?? json['ocupacion'];
+
     return UserModel(
-      id: json['id'],
-      username: json['username'],
-      firstName: json['first_name'] ?? '',
-      lastName: json['last_name'] ?? '',
-      email: json['email'],
+      id: (json['id'] ?? 0) as int,
+      username: (json['username'] ?? '').toString(),
+      email: (json['email'] ?? '').toString(),
+      age: ageValue is int ? ageValue : int.tryParse(ageValue?.toString() ?? ''),
+      occupation: occupationValue?.toString(),
       isActive: json['is_active'] ?? true,
     );
   }

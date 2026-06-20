@@ -1,12 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../../../auth/presentation/views/login_screen.dart';
+
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   final Color primaryColor = const Color(0xFF142175);
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final vm = context.read<AuthViewModel>();
+      if (vm.currentUser == null) {
+        vm.loadProfile();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final vm = context.watch<AuthViewModel>();
+    final user = vm.currentUser;
+
+    if (vm.isLoading && user == null) {
+      return const SafeArea(
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -19,7 +48,7 @@ class ProfileScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: primaryColor.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 5))]
+                boxShadow: [BoxShadow(color: primaryColor.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 5))]
               ),
               child: Column(
                 children: [
@@ -35,9 +64,9 @@ class ProfileScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Text('Sofía Sarmiento', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: primaryColor)),
+                  Text(user?.username ?? 'Usuario', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: primaryColor)),
                   const SizedBox(height: 4),
-                  const Text('sofi@soulmetrics.com', style: TextStyle(color: Color(0xFF454651))),
+                  Text(user?.email ?? 'correo@ejemplo.com', style: const TextStyle(color: Color(0xFF454651))),
                   const SizedBox(height: 12),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -60,7 +89,16 @@ class ProfileScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Información Personal', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor)),
-                const Text('Editar todo', style: TextStyle(color: Color(0xFF5a55a2), fontWeight: FontWeight.w500)),
+                GestureDetector(
+                  onTap: user == null
+                      ? null
+                      : () => _showEditProfileDialog(
+                            context,
+                            currentAge: user.age,
+                            currentOccupation: user.occupation,
+                          ),
+                  child: const Text('Editar', style: TextStyle(color: Color(0xFF5a55a2), fontWeight: FontWeight.w500)),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -68,11 +106,11 @@ class ProfileScreen extends StatelessWidget {
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
               child: Column(
                 children: [
-                  _buildListTile(Icons.person, 'Nombre Completo', 'Sofía Sarmiento'),
+                  _buildListTile(Icons.person, 'Usuario', user?.username ?? '-'),
                   const Divider(height: 1),
-                  _buildListTile(Icons.cake, 'Edad', '21 años'),
+                  _buildListTile(Icons.cake, 'Edad', user?.age != null ? '${user!.age} años' : '-'),
                   const Divider(height: 1),
-                  _buildListTile(Icons.work, 'Ocupación', 'Estudiante de Psicología'),
+                  _buildListTile(Icons.work, 'Ocupación', user?.occupation ?? '-'),
                 ],
               ),
             ),
@@ -87,7 +125,7 @@ class ProfileScreen extends StatelessWidget {
                   ListTile(
                     leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: const Color(0xFFedeeef), borderRadius: BorderRadius.circular(8)), child: const Icon(Icons.notifications, color: Color(0xFF5a55a2))),
                     title: const Text('Notificaciones Push', style: TextStyle(fontWeight: FontWeight.w500)),
-                    trailing: Switch(value: true, activeColor: const Color(0xFF5a55a2), onChanged: (val) {}),
+                    trailing: Switch(value: true, activeThumbColor: const Color(0xFF5a55a2), onChanged: (val) {}),
                   ),
                   const Divider(height: 1),
                   ListTile(
@@ -102,7 +140,15 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 32),
 
             OutlinedButton.icon(
-              onPressed: () {},
+              onPressed: () async {
+                await vm.logout();
+                if (!context.mounted) return;
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
+              },
               icon: const Icon(Icons.logout),
               label: const Text('Cerrar Sesión'),
               style: OutlinedButton.styleFrom(
@@ -130,6 +176,76 @@ class ProfileScreen extends StatelessWidget {
       subtitle: Text(subtitle, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black)),
       trailing: const Icon(Icons.chevron_right),
       onTap: () {},
+    );
+  }
+
+  void _showEditProfileDialog(BuildContext context, {int? currentAge, String? currentOccupation}) {
+    final ageController = TextEditingController(text: currentAge?.toString() ?? '');
+    final occupationController = TextEditingController(text: currentOccupation ?? '');
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Actualizar perfil'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: ageController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Edad'),
+                  validator: (value) {
+                    final parsed = int.tryParse(value ?? '');
+                    if (parsed == null || parsed <= 0) return 'Edad inválida';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: occupationController,
+                  decoration: const InputDecoration(labelText: 'Ocupación'),
+                  validator: (value) => (value == null || value.trim().isEmpty) ? 'Campo requerido' : null,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+
+                final authVm = context.read<AuthViewModel>();
+                final nav = Navigator.of(dialogContext);
+                final messenger = ScaffoldMessenger.of(context);
+
+                final ok = await authVm.updateProfile(
+                      int.parse(ageController.text.trim()),
+                      occupationController.text.trim(),
+                    );
+
+                if (!mounted || !dialogContext.mounted) return;
+
+                nav.pop();
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(ok ? 'Perfil actualizado' : (authVm.errorMessage ?? 'No se pudo actualizar')),
+                    backgroundColor: ok ? Colors.green : Colors.redAccent,
+                  ),
+                );
+              },
+              child: const Text('Guardar'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
