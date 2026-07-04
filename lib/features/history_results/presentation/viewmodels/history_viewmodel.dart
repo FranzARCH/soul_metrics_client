@@ -32,12 +32,24 @@ class HistoryViewModel extends ChangeNotifier {
     if (query.isEmpty) {
       filteredRecords = List.from(historyRecords);
     } else {
+      final lowerQuery = query.toLowerCase();
       filteredRecords = historyRecords.where((record) {
-        // Filtra de forma flexible por el ID del reporte o por descripciones guardadas
+        // Filtra por ID del reporte
         final idMatch = record.id.toString().contains(query);
+        
+        // Filtra por claves de rasgos (EST, OPN, EXT, etc.)
+        final traitKeyMatch = record.predictedScores.keys
+            .any((key) => key.toLowerCase().contains(lowerQuery));
+        
+        // Filtra por descripciones de rasgos
         final descMatch = record.traitDescriptions.values
-            .any((desc) => desc.toLowerCase().contains(query.toLowerCase()));
-        return idMatch || descMatch;
+            .any((desc) => desc.toLowerCase().contains(lowerQuery));
+        
+        // Filtra por fecha (formato día/mes/año)
+        final dateString = '${record.createdAt.day}/${record.createdAt.month}/${record.createdAt.year}';
+        final dateMatch = dateString.contains(query);
+        
+        return idMatch || traitKeyMatch || descMatch || dateMatch;
       }).toList();
     }
     notifyListeners();

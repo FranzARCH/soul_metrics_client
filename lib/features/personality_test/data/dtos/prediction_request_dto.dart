@@ -1,22 +1,9 @@
 class PredictionRequestDto {
   final Map<String, int> answers;
-  final Map<String, int> responseTimes;
 
-  PredictionRequestDto({required this.answers, required this.responseTimes});
+  PredictionRequestDto({required this.answers});
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> jsonPayload = {};
-    
-    // Asigna las respuestas puestas (Ej: 'EXT1': 4)
-    answers.forEach((key, value) {
-      jsonPayload[key] = value;
-    });
-
-    // Asigna los tiempos transcurridos formateados para Django (Ej: 'EXT1_E': 2450)
-    responseTimes.forEach((key, value) {
-      jsonPayload['${key}_E'] = value;
-    });
-
-    return jsonPayload;
+    return Map<String, dynamic>.from(answers);
   }
 }

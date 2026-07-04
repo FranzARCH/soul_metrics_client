@@ -53,8 +53,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       controller: searchController,
                       onChanged: viewModel.filterSearch,
                       decoration: InputDecoration(
-                        hintText: 'Buscar evaluaciones...',
+                        hintText: 'Buscar por ID, rasgo, descripción o fecha...',
                         prefixIcon: const Icon(Icons.search, color: Color(0xFF767682)),
+                        suffixIcon: searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, color: Color(0xFF767682), size: 20),
+                                onPressed: () {
+                                  searchController.clear();
+                                  viewModel.filterSearch('');
+                                },
+                              )
+                            : null,
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),

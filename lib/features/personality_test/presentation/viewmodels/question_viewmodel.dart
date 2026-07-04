@@ -22,7 +22,6 @@ class QuestionViewModel extends ChangeNotifier {
   PredictionResult? result;
 
   final Map<String, int> _answers = {};
-  final Map<String, int> _responseTimes = {};
   late DateTime _questionStartTime;
 
   Map<String, int> get answers => _answers;
@@ -47,9 +46,6 @@ class QuestionViewModel extends ChangeNotifier {
     if (questions.isEmpty) return;
     
     final currentQuestion = questions[currentIndex];
-    final duration = DateTime.now().difference(_questionStartTime).inMilliseconds;
-    _responseTimes[currentQuestion.code] = (_responseTimes[currentQuestion.code] ?? 0) + duration;
-
     _answers[currentQuestion.code] = value;
     notifyListeners();
   }
@@ -76,7 +72,7 @@ class QuestionViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      result = await submitAssessmentUseCase(_answers, _responseTimes);
+      result = await submitAssessmentUseCase(_answers);
       isLoading = false;
       notifyListeners();
       return true;

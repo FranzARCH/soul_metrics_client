@@ -66,8 +66,8 @@ class AuthRepository implements IAuthRepository {
       final response = await apiDataSource.updateProfile(token, {
         'username': username,
         'email': email,
-        'edad': age,
-        'ocupacion': occupation,
+        'age': age,
+        'occupation': occupation,
       });
       final payload = _extractUserPayload(response) ?? response;
       return UserModel.fromJson(payload);

@@ -6,6 +6,7 @@ class PredictionResultModel extends PredictionResult {
     required super.status,
     required super.personalityPrediction,
     required super.traitDescriptions,
+    super.traitDescription,
     required super.graphicsData,
     required super.message,
   });
@@ -23,11 +24,22 @@ class PredictionResultModel extends PredictionResult {
       }
     });
 
+    // Parsear trait_descriptions como objeto con title y description
+    TraitDescription? traitDesc;
+    final rawTraitDesc = json['trait_descriptions'];
+    if (rawTraitDesc is Map<String, dynamic>) {
+      traitDesc = TraitDescription(
+        title: rawTraitDesc['title'] ?? '',
+        description: rawTraitDesc['description'] ?? '',
+      );
+    }
+
     return PredictionResultModel(
       id: json['id'] ?? 0,
       status: json['status'] ?? 'success',
       personalityPrediction: predictionMap,
       traitDescriptions: Map<String, String>.from(json['trait_descriptions'] ?? {}),
+      traitDescription: traitDesc,
       graphicsData: json['graphics_data'] ?? {},
       message: json['message'] ?? '',
     );

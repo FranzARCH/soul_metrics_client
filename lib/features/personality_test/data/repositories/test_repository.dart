@@ -31,9 +31,9 @@ class TestRepositoryImpl implements ITestRepository {
   }
 
   @override
-  Future<PredictionResult> submitAnswers(Map<String, int> answers, Map<String, int> times) async {
+  Future<PredictionResult> submitAnswers(Map<String, int> answers) async {
     final token = await _getValidToken();
-    final dto = PredictionRequestDto(answers: answers, responseTimes: times);
+    final dto = PredictionRequestDto(answers: answers);
     return await dataSource.calculatePrediction(token, dto);
   }
 

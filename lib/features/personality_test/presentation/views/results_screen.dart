@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
+import 'dart:typed_data';
 import '../viewmodels/profile_viewmodel.dart';
 import '../viewmodels/question_viewmodel.dart';
 import '../../domain/entities/prediction_result.dart';
@@ -87,6 +88,34 @@ class ResultsScreen extends StatelessWidget {
 
           return Scaffold(
             backgroundColor: const Color(0xFFF8F9FA),
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              title: Text(
+                hasRealData || hasAssessmentResult ? 'Tu Perfil de Personalidad' : 'Visualización de Reporte',
+                style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              actions: [
+                if (hasRealData || hasAssessmentResult)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: viewModel.isExporting
+                        ? const Padding(
+                            padding: EdgeInsets.all(12.0),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : IconButton(
+                            icon: const Icon(Icons.picture_as_pdf, color: Color(0xFF142175)),
+                            tooltip: 'Exportar PDF',
+                            onPressed: () => _exportPdf(context, viewModel),
+                          ),
+                  ),
+              ],
+            ),
             body: SafeArea(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
@@ -122,7 +151,11 @@ class ResultsScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 24),
 
-                    if (hasRealData && profileData.aiConclusions != null) ...[
+                    // Mostrar descripción del backend si está disponible del assessment
+                    if (hasAssessmentResult && latestAssessment?.traitDescription != null) ...[
+                      _buildTraitDescriptionCard(latestAssessment!.traitDescription!),
+                      const SizedBox(height: 24),
+                    ] else if (hasRealData && profileData.aiConclusions != null) ...[
                       _buildAiConclusionsCard(profileData.aiConclusions!),
                       const SizedBox(height: 24),
                     ],
@@ -140,6 +173,63 @@ class ResultsScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _exportPdf(BuildContext context, ProfileViewModel viewModel) async {
+    final pdfBytes = await viewModel.exportPdf();
+    
+    if (!context.mounted) return;
+    
+    if (pdfBytes != null) {
+      // Show success message with option to download/share
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('PDF generado correctamente. Tamaño: '),
+          action: SnackBarAction(
+            label: 'Guardar',
+            onPressed: () {
+              // For web, we would use html anchor download
+              // For mobile, we would use path_provider to save the file
+              // This is a placeholder - you may need to add file_saver or similar package
+            },
+          ),
+        ),
+      );
+    } else if (viewModel.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al generar PDF: ${viewModel.error}'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
+
+  Widget _buildTraitDescriptionCard(TraitDescription traitDesc) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEEF2F6),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFD0D7DE)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome, color: secondaryColor, size: 20),
+              const SizedBox(width: 8),
+              Text('Insights Analíticos de IA', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryColor)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(traitDesc.title, style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF1E293B), fontSize: 14)),
+          const SizedBox(height: 8),
+          Text(traitDesc.description, style: const TextStyle(color: Color(0xFF475569), fontSize: 13, height: 1.3)),
+        ],
       ),
     );
   }

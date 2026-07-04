@@ -16,6 +16,7 @@ import 'package:soul_metrics_client/features/history_results/presentation/viewmo
 import 'package:soul_metrics_client/features/personality_test/data/repositories/profile_repository.dart';
 import 'package:soul_metrics_client/features/personality_test/domain/repositories/iprofile_repository.dart';
 import 'package:soul_metrics_client/features/personality_test/domain/usecases/get_holistic_profile_usecase.dart';
+import 'package:soul_metrics_client/features/personality_test/domain/usecases/export_profile_pdf_usecase.dart';
 import 'package:soul_metrics_client/features/personality_test/presentation/viewmodels/profile_viewmodel.dart';
 
 // ==========================================
@@ -131,5 +132,9 @@ void setupLocator() {
   );
 
   locator.registerLazySingleton(() => GetHolisticProfileUseCase(locator()));
-  locator.registerFactory(() => ProfileViewModel(getHolisticProfileUseCase: locator()));
+  locator.registerLazySingleton(() => ExportProfilePdfUseCase(locator()));
+  locator.registerFactory(() => ProfileViewModel(
+    getHolisticProfileUseCase: locator(),
+    exportProfilePdfUseCase: locator(),
+  ));
 }

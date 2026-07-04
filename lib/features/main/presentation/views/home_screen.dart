@@ -170,31 +170,60 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text('Insights del Día', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor)),
                 const SizedBox(height: 16),
 
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 16,
-                  children: [
-                    SizedBox(
-                      width: 350,
-                      child: _buildInsightCard(
-                        Icons.lightbulb_outline,
-                        'Resumen IA',
-                        aiSummary ?? 'Completa tu primera evaluación para recibir insights personalizados de IA.',
-                        const Color(0xFFcfe8dd),
-                        const Color(0xFF091f19),
-                      ),
-                    ),
-                    SizedBox(
-                      width: 350,
-                      child: _buildInsightCard(
-                        Icons.self_improvement,
-                        'Recomendación',
-                        aiRecommendation ?? 'Activa tu perfil cognitivo respondiendo el test para obtener recomendaciones accionables.',
-                        const Color(0xFFe3dfff),
-                        const Color(0xFF15095c),
-                      ),
-                    ),
-                  ],
+                // Una columna en móvil, dos columnas solo si la pantalla es muy grande
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    if (constraints.maxWidth > 600) {
+                      // Dos columnas en pantallas grandes
+                      return IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: _buildInsightCard(
+                                Icons.lightbulb_outline,
+                                'Resumen IA',
+                                aiSummary ?? 'Completa tu primera evaluación para recibir insights personalizados de IA.',
+                                const Color(0xFFcfe8dd),
+                                const Color(0xFF091f19),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _buildInsightCard(
+                                Icons.self_improvement,
+                                'Recomendación',
+                                aiRecommendation ?? 'Activa tu perfil cognitivo respondiendo el test para obtener recomendaciones accionables.',
+                                const Color(0xFFe3dfff),
+                                const Color(0xFF15095c),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    } else {
+                      // Una columna en móvil
+                      return Column(
+                        children: [
+                          _buildInsightCard(
+                            Icons.lightbulb_outline,
+                            'Resumen IA',
+                            aiSummary ?? 'Completa tu primera evaluación para recibir insights personalizados de IA.',
+                            const Color(0xFFcfe8dd),
+                            const Color(0xFF091f19),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildInsightCard(
+                            Icons.self_improvement,
+                            'Recomendación',
+                            aiRecommendation ?? 'Activa tu perfil cognitivo respondiendo el test para obtener recomendaciones accionables.',
+                            const Color(0xFFe3dfff),
+                            const Color(0xFF15095c),
+                          ),
+                        ],
+                      );
+                    }
+                  },
                 ),
               ],
             ),

@@ -62,7 +62,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
     if (viewModel.questions.isEmpty) return const SizedBox.shrink();
 
     final currentQuestion = viewModel.questions[viewModel.currentIndex];
-    final progressFraction = (viewModel.currentIndex + 1) / viewModel.questions.length;
+    final progressFraction = (viewModel.currentIndex) / viewModel.questions.length;
     final progressPercentage = (progressFraction * 100).toInt();
     final selectedValue = viewModel.answers[currentQuestion.code];
 

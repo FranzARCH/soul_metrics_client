@@ -4,6 +4,6 @@ import 'dart:typed_data';
 
 abstract class ITestRepository {
   Future<List<Question>> getAssessmentQuestions();
-  Future<PredictionResult> submitAnswers(Map<String, int> answers, Map<String, int> times);
+  Future<PredictionResult> submitAnswers(Map<String, int> answers);
   Future<Uint8List> downloadPdfDossier();
 }

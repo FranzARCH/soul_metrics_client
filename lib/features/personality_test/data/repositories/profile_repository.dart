@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../../domain/entities/personality_profile.dart';
 import '../../domain/repositories/iprofile_repository.dart';
@@ -38,5 +39,27 @@ class ProfileRepositoryImpl implements IProfileRepository {
     }
     
     throw Exception('Error al recuperar el perfil holístico: ${response.statusCode}');
+  }
+
+  @override
+  Future<Uint8List> exportPersonalityProfilePdf() async {
+    final token = await tokenStore.getAccessToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('Sesión expirada o no encontrada.');
+    }
+
+    final response = await client.get(
+      Uri.parse('$baseUrl/api/profile/personality/export/'),
+      headers: {
+        'Accept': 'application/pdf',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return response.bodyBytes;
+    }
+    
+    throw Exception('Error al generar el PDF: ${response.statusCode}');
   }
 }
