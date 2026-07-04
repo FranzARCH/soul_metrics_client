@@ -12,7 +12,7 @@ class AuthApiDataSource {
 
   AuthApiDataSource({
     required this.client,
-    this.baseUrl = 'http://localhost:8002',
+    required this.baseUrl,
   });
 
   Future<Map<String, dynamic>> register(RegisterDto request) async {

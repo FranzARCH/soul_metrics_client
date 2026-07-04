@@ -61,12 +61,11 @@ class AuthRepository implements IAuthRepository {
   }
 
   @override
-  Future<User> updateProfile(int age, String occupation) async {
+  Future<User> updateProfile(String username, String email, int age, String occupation) async {
     return _withAccessToken((token) async {
-      final current = await getProfile();
       final response = await apiDataSource.updateProfile(token, {
-        'username': current.username,
-        'email': current.email,
+        'username': username,
+        'email': email,
         'edad': age,
         'ocupacion': occupation,
       });

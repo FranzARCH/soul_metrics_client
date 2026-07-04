@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/question_viewmodel.dart';
-import 'results_screen.dart';
+import '../../../main/presentation/views/main_layout_screen.dart';
 
 class QuestionScreen extends StatefulWidget {
   const QuestionScreen({super.key});
@@ -47,7 +47,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
-          child: Container(color: const Color(0xFFC6C5D3).withOpacity(0.3), height: 1.0),
+          child: Container(color: const Color(0xFFC6C5D3).withValues(alpha: 0.3), height: 1.0),
         ),
       ),
       body: viewModel.isLoading && viewModel.questions.isEmpty
@@ -99,9 +99,9 @@ class _QuestionScreenState extends State<QuestionScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(32),
-                  border: Border.all(color: const Color(0xFFC6C5D3).withOpacity(0.3)),
+                  border: Border.all(color: const Color(0xFFC6C5D3).withValues(alpha: 0.3)),
                   boxShadow: [
-                    BoxShadow(color: primaryColor.withOpacity(0.05), blurRadius: 30, offset: const Offset(0, 10))
+                    BoxShadow(color: primaryColor.withValues(alpha: 0.05), blurRadius: 30, offset: const Offset(0, 10))
                   ],
                 ),
                 child: Column(
@@ -219,7 +219,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
                   color: isActive ? secondaryColor : const Color(0xFFC6C5D3),
                   width: 2,
                 ),
-                boxShadow: isActive ? [BoxShadow(color: secondaryColor.withOpacity(0.3), blurRadius: 10)] : null,
+                boxShadow: isActive ? [BoxShadow(color: secondaryColor.withValues(alpha: 0.3), blurRadius: 10)] : null,
               ),
               child: isActive ? const Icon(Icons.check, color: Colors.white) : const SizedBox.shrink(),
             ),
@@ -243,13 +243,31 @@ class _QuestionScreenState extends State<QuestionScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const AlertDialog(
-        content: Row(
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(width: 24),
-            Text('Procesando datos con la IA...'),
-          ],
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8F9FA),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFC6C5D3).withValues(alpha: 0.4)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: primaryColor),
+              const SizedBox(width: 18),
+              Expanded(
+                child: Text(
+                  'Procesando datos con la IA...',
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -259,42 +277,110 @@ class _QuestionScreenState extends State<QuestionScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (modalContext) => AlertDialog(
+      builder: (modalContext) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Row(
-          children: [
-            Icon(Icons.analytics, color: primaryColor, size: 28),
-            const SizedBox(width: 10),
-            const Text('Diagnóstico Inmediato', style: TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Test guardado',
-              style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              result.message.isNotEmpty ? result.message : 'Tus respuestas han sido procesadas con éxito',
-              style: const TextStyle(fontSize: 15, height: 1.4),
-            ),
-          ],
-        ),
-        actions: [
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFF142175)),
-            onPressed: () {
-              Navigator.pop(modalContext); // 1. Cierra el modal de diagnóstico
-              Navigator.pop(context);      // 2. Cierra el QuestionScreen regresando al Layout de Pestañas
-              
-              // context.read<NavigationProvider>().setIndex(1); // Índice donde se ubique tu pestaña de resultados
-            },
-            child: const Text('Volver al inicio'),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF8F9FA),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFFC6C5D3).withValues(alpha: 0.35)),
+            boxShadow: [
+              BoxShadow(
+                color: primaryColor.withValues(alpha: 0.08),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
           ),
-        ],
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFdfe0ff),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.analytics, color: primaryColor, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Diagnóstico Inmediato',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      color: primaryColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFcfe8dd),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Text(
+                  'TEST GUARDADO',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF091f19),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                result.message.isNotEmpty ? result.message : 'Tus respuestas han sido procesadas con éxito',
+                style: const TextStyle(fontSize: 15, height: 1.45, color: Color(0xFF454651)),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(modalContext);
+                        Navigator.pop(context);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: primaryColor,
+                        side: BorderSide(color: primaryColor.withValues(alpha: 0.45)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('Volver al inicio'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: () {
+                        Navigator.of(modalContext).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (_) => const MainLayoutScreen(initialIndex: 1),
+                          ),
+                          (route) => false,
+                        );
+                      },
+                      child: const Text('Ver resultados'),
+                    ),
+                  ),
+                ],
+              )
+            ],
+          ),
+        ),
       ),
     );
   }

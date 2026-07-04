@@ -13,7 +13,7 @@ class ProfileRepositoryImpl implements IProfileRepository {
   ProfileRepositoryImpl({
     required this.client,
     required this.tokenStore,
-    this.baseUrl = 'http://localhost:8002', // Cambia a tu URL de backend
+    required this.baseUrl,
   });
 
   @override

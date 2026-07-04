@@ -13,7 +13,7 @@ class HistoryRepositoryImpl implements IHistoryRepository {
   HistoryRepositoryImpl({
     required this.client,
     required this.tokenStore,
-    this.baseUrl = 'http://localhost:8002',
+    required this.baseUrl,
   });
 
   @override

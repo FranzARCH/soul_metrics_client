@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:soul_metrics_client/core/config/api_config.dart';
 
 // ==========================================
 // IMPORTS: MÓDULO DE HISTORIAL
@@ -54,7 +55,10 @@ void setupLocator() {
   // ==========================================
   // AUTH MODULE
   // ==========================================
-  locator.registerLazySingleton<AuthApiDataSource>(() => AuthApiDataSource(client: locator()));
+  locator.registerLazySingleton<AuthApiDataSource>(() => AuthApiDataSource(
+        client: locator(),
+        baseUrl: ApiConfig.baseUrl,
+      ));
 
   locator.registerLazySingleton<IAuthRepository>(
     () => AuthRepository(locator(), locator()),
@@ -80,7 +84,10 @@ void setupLocator() {
   // PERSONALITY TEST MODULE (Django REST API)
   // ==========================================
   locator.registerLazySingleton<AssessmentApiDataSource>(
-    () => AssessmentApiDataSource(client: locator()),
+    () => AssessmentApiDataSource(
+      client: locator(),
+      baseUrl: ApiConfig.baseUrl,
+    ),
   );
 
   locator.registerLazySingleton<ITestRepository>(
@@ -105,6 +112,7 @@ void setupLocator() {
     () => HistoryRepositoryImpl(
       client: locator(), 
       tokenStore: locator(),
+      baseUrl: ApiConfig.baseUrl,
     ),
   );
 
@@ -118,6 +126,7 @@ void setupLocator() {
     () => ProfileRepositoryImpl(
       client: locator(), 
       tokenStore: locator(),
+      baseUrl: ApiConfig.baseUrl,
     ),
   );
 

@@ -6,10 +6,24 @@ class UpdateProfileUseCase {
 
   UpdateProfileUseCase(this.repository);
 
-  Future<User> call(int age, String occupation) {
-    if (age <= 0 || occupation.trim().isEmpty) {
+  Future<User> call(String username, String email, int age, String occupation) {
+    final normalizedUsername = username.trim();
+    final normalizedEmail = email.trim();
+    final normalizedOccupation = occupation.trim();
+
+    if (normalizedUsername.isEmpty ||
+        normalizedEmail.isEmpty ||
+        !normalizedEmail.contains('@') ||
+        age <= 0 ||
+        normalizedOccupation.isEmpty) {
       throw Exception('Datos de perfil inválidos.');
     }
-    return repository.updateProfile(age, occupation.trim());
+
+    return repository.updateProfile(
+      normalizedUsername,
+      normalizedEmail,
+      age,
+      normalizedOccupation,
+    );
   }
 }

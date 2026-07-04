@@ -2,6 +2,22 @@
 
 Flutter application which integrates RF to diagnose user's personality
 
+## API Configuration
+
+The client now reads the backend URL from a single configuration point using `API_BASE_URL`.
+
+Examples:
+
+```bash
+flutter run -d chrome --dart-define=API_BASE_URL=https://YOUR_DEPLOYED_BACKEND
+```
+
+```bash
+flutter build apk --dart-define=API_BASE_URL=https://YOUR_DEPLOYED_BACKEND
+```
+
+If `API_BASE_URL` is not provided, it falls back to `http://localhost:8002`.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.

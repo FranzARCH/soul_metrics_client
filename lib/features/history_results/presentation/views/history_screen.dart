@@ -112,8 +112,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFc6c5d3).withOpacity(0.3)),
-        boxShadow: [BoxShadow(color: primaryColor.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 5))]
+        border: Border.all(color: const Color(0xFFc6c5d3).withValues(alpha: 0.3)),
+        boxShadow: [BoxShadow(color: primaryColor.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, 5))]
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,7 +156,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           const Divider(),
           TextButton.icon(
             onPressed: () {
-              // Aquí podrías inyectar el record.graphicsData directamente a tu vista de resultados para ver el histórico detallado
+              _showHistoryDetailDialog(record);
             },
             icon: const Icon(Icons.visibility, size: 18),
             label: const Text('Ver Detalles'),
@@ -166,8 +166,82 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
+  void _showHistoryDetailDialog(HistoryItem record) {
+    final sortedScores = record.predictedScores.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+
+    final summaryTitle = record.traitDescriptions['title'];
+    final summaryDescription = record.traitDescriptions['description'];
+    final traitEntries = record.traitDescriptions.entries
+        .where((entry) => entry.key != 'title' && entry.key != 'description')
+        .toList();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Reporte #${record.id}'),
+          content: SizedBox(
+            width: 480,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Puntajes predichos', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  ...sortedScores.map((score) {
+                    final normalized = _normalizeToPercent(score.value);
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text('${_localiseTrait(score.key)}: ${normalized.toStringAsFixed(1)}%'),
+                    );
+                  }),
+                  const SizedBox(height: 12),
+                  if ((summaryTitle != null && summaryTitle.trim().isNotEmpty) ||
+                      (summaryDescription != null && summaryDescription.trim().isNotEmpty)) ...[
+                    const Text('Descripción general', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    if (summaryTitle != null && summaryTitle.trim().isNotEmpty)
+                      Text(summaryTitle, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    if (summaryDescription != null && summaryDescription.trim().isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(summaryDescription),
+                    ],
+                    const SizedBox(height: 12),
+                  ],
+                  if (traitEntries.isNotEmpty) ...[
+                    const Text('Descripciones por rasgo', style: TextStyle(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 8),
+                    ...traitEntries.map((entry) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10.0),
+                          child: Text('${_localiseTrait(entry.key)}: ${entry.value}'),
+                        )),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   String _localiseTrait(String traitKey) {
     switch (traitKey) {
+      case 'EST': return 'Estabilidad emocional';
+      case 'OPN': return 'Apertura a la Experiencia';
+      case 'CSN':
+      case 'CON': return 'Responsabilidad';
+      case 'EXT': return 'Extraversión';
+      case 'AGR': return 'Amabilidad';
+      case 'NEU': return 'Neuroticismo';
       case 'Openness': return 'Apertura a la Experiencia';
       case 'Conscientiousness': return 'Responsabilidad';
       case 'Extraversion': return 'Extraversión';
@@ -175,5 +249,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
       case 'Neuroticism': return 'Neuroticismo';
       default: return traitKey;
     }
+  }
+
+  double _normalizeToPercent(double raw) {
+    if (raw <= 1.0) return (raw * 100).clamp(0.0, 100.0);
+    if (raw <= 5.0) return ((raw - 1.0) / 4.0 * 100).clamp(0.0, 100.0);
+    if (raw <= 10.0) return (raw * 10).clamp(0.0, 100.0);
+    return raw.clamp(0.0, 100.0);
   }
 }

@@ -11,7 +11,7 @@ class AssessmentApiDataSource {
 
   AssessmentApiDataSource({
     required this.client,
-    this.baseUrl = 'http://localhost:8002',
+    required this.baseUrl,
   });
 
   Map<String, String> _headers(String? token, {String accept = 'application/json'}) {

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
-import 'dart:html' as html;
 import '../viewmodels/profile_viewmodel.dart';
+import '../viewmodels/question_viewmodel.dart';
+import '../../domain/entities/prediction_result.dart';
 import '../../domain/entities/personality_profile.dart';
 import '../../../../injection_container.dart';
 
@@ -26,6 +27,20 @@ class ResultsScreen extends StatelessWidget {
     'Extraversion': 'Extraversión',
     'Agreeableness': 'Amabilidad',
     'Neuroticism': 'Neuroticismo',
+    'OPN': 'Apertura',
+    'CSN': 'Responsabilidad',
+    'CON': 'Responsabilidad',
+    'EXT': 'Extraversión',
+    'AGR': 'Amabilidad',
+    'EST': 'Estabilidad emocional',
+  };
+
+  static const Map<String, List<String>> _traitAliases = {
+    'Openness': ['openness', 'open', 'ope', 'opn', 'opc', 'o', 'apertura'],
+    'Conscientiousness': ['conscientiousness', 'con', 'cons', 'csn', 'c', 'responsabilidad'],
+    'Extraversion': ['extraversion', 'extroversion', 'ext', 'e', 'extraversion'],
+    'Agreeableness': ['agreeableness', 'agr', 'agree', 'a', 'amabilidad'],
+    'Neuroticism': ['neuroticism', 'neu', 'neuro', 'n', 'neuroticismo'],
   };
 
   @override
@@ -34,14 +49,19 @@ class ResultsScreen extends StatelessWidget {
       create: (_) => locator<ProfileViewModel>()..loadProfileData(),
       child: Consumer<ProfileViewModel>(
         builder: (context, viewModel, child) {
-          if (viewModel.isLoading) {
+          final latestAssessment = context.watch<QuestionViewModel>().result;
+          final currentProfile = viewModel.profile;
+          final bool hasRealData = currentProfile?.hasPersonalityProfile == true;
+          final bool hasAssessmentResult = latestAssessment != null;
+
+          if (viewModel.isLoading && !hasAssessmentResult) {
             return const Scaffold(
               backgroundColor: Color(0xFFF8F9FA),
               body: Center(child: CircularProgressIndicator()),
             );
           }
 
-          if (viewModel.error != null) {
+          if (viewModel.error != null && !hasAssessmentResult) {
             return Scaffold(
               backgroundColor: const Color(0xFFF8F9FA),
               body: Center(
@@ -57,24 +77,13 @@ class ResultsScreen extends StatelessWidget {
             );
           }
 
-          final currentProfile = viewModel.profile;
-          final bool hasRealData = currentProfile != null && currentProfile.hasPersonalityProfile;
-          final PersonalityProfile profileData = hasRealData ? currentProfile! : _getEmptyFallbackProfile();
+          final PersonalityProfile profileData = hasRealData
+              ? currentProfile as PersonalityProfile
+              : _getEmptyFallbackProfile();
 
-          final List<_TraitScore> traitScores = _traitOrder.map((trait) {
-            final traitConclusion = profileData.traitsConclusions[trait];
-            final double percentage = (traitConclusion != null) ? (traitConclusion.overallPercentage * 100) : 0.0;
-            final String desc = traitConclusion?.conclusion ?? 'Sin análisis disponible para este rasgo.';
-            final String lvl = traitConclusion?.level.toUpperCase() ?? 'MEDIO';
-
-            return _TraitScore(
-              key: trait,
-              label: _traitLabelsEs[trait]!,
-              value: percentage.clamp(0.0, 100.0),
-              description: desc,
-              level: lvl,
-            );
-          }).toList();
+          final List<_TraitScore> traitScores = hasRealData
+              ? _buildProfileTraitScores(profileData)
+              : _buildAssessmentTraitScores(latestAssessment);
 
           return Scaffold(
             backgroundColor: const Color(0xFFF8F9FA),
@@ -85,17 +94,17 @@ class ResultsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      hasRealData ? 'Evaluación Completada' : 'Demostración de Resultados', 
+                      hasRealData || hasAssessmentResult ? 'Evaluación Completada' : 'Demostración de Resultados', 
                       style: TextStyle(color: secondaryColor, fontWeight: FontWeight.w600, fontSize: 12),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      hasRealData ? 'Tu Perfil de Personalidad' : 'Visualización de Reporte', 
+                      hasRealData || hasAssessmentResult ? 'Tu Perfil de Personalidad' : 'Visualización de Reporte', 
                       style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: primaryColor),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      hasRealData
+                      hasRealData || hasAssessmentResult
                           ? 'Basado en tus respuestas, hemos mapeado tus rasgos Big Five. Este análisis proporciona una visión de tus predisposiciones psicológicas.'
                           : 'Demostración de resultados después de que tomes el quiz. Esta es una vista formal de cómo se renderizarán tus rasgos una vez completes el test oficial.',
                       style: const TextStyle(fontSize: 16, color: Color(0xFF454651), height: 1.4),
@@ -107,7 +116,10 @@ class ResultsScreen extends StatelessWidget {
                       const SizedBox(height: 24),
                     ],
 
-                    _buildChartCard(profileData.radarData),
+                    _buildChartCard(
+                      radarData: profileData.radarData,
+                      latestAssessment: latestAssessment,
+                    ),
                     const SizedBox(height: 24),
 
                     if (hasRealData && profileData.aiConclusions != null) ...[
@@ -166,12 +178,26 @@ class ResultsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildChartCard(ComparisonRadarData? radarData) {
-    final labels = radarData?.labels.map((l) => _traitLabelsEs[l] ?? l).toList() ?? ['Apertura', 'Responsabilidad', 'Extraversión', 'Amabilidad', 'Neuroticismo'];
-    
-    // 🚀 CORRECCIÓN DE ESCALA: Convertimos de rango Likert (1.0-5.0) a Porcentaje (0-100%) para expandir el gráfico
-    final initialScores = radarData?.initialData.map((v) => ((v - 1) / 4) * 100).toList() ?? [50.0, 50.0, 50.0, 50.0, 50.0];
-    final currentScores = radarData?.currentData.map((v) => ((v - 1) / 4) * 100).toList() ?? [50.0, 50.0, 50.0, 50.0, 50.0];
+  Widget _buildChartCard({
+    required ComparisonRadarData? radarData,
+    required PredictionResult? latestAssessment,
+  }) {
+    final liveRadar = _buildLiveRadar(latestAssessment);
+    final resolvedLabels = (radarData?.labels.isNotEmpty == true)
+        ? radarData!.labels
+        : liveRadar.labels;
+
+    final labels = resolvedLabels.map((l) => _traitLabelsEs[l] ?? l).toList();
+
+    final initialSource = (radarData?.initialData.isNotEmpty == true)
+        ? radarData!.initialData
+        : liveRadar.initialData;
+    final currentSource = (radarData?.currentData.isNotEmpty == true)
+        ? radarData!.currentData
+        : liveRadar.currentData;
+
+    final initialScores = initialSource.map(_normalizeToPercent).toList();
+    final currentScores = currentSource.map(_normalizeToPercent).toList();
 
     return Container(
       width: double.infinity,
@@ -184,7 +210,7 @@ class ResultsScreen extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            radarData?.title ?? 'Distribución de rasgos',
+            radarData?.title ?? liveRadar.title,
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: primaryColor),
           ),
           const SizedBox(height: 12),
@@ -255,7 +281,7 @@ class ResultsScreen extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: [BoxShadow(color: const Color(0xFF142175).withOpacity(0.03), blurRadius: 20, offset: const Offset(0, 5))]
+        boxShadow: [BoxShadow(color: const Color(0xFF142175).withValues(alpha: 0.03), blurRadius: 20, offset: const Offset(0, 5))]
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -266,7 +292,7 @@ class ResultsScreen extends StatelessWidget {
               Text(score.label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Color(0xFF142175))),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(color: barColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
+                decoration: BoxDecoration(color: barColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
                 child: Text(score.level, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: barColor)),
               )
             ],
@@ -309,6 +335,159 @@ class ResultsScreen extends StatelessWidget {
       }
     );
   }
+
+  List<_TraitScore> _buildProfileTraitScores(PersonalityProfile profileData) {
+    return _traitOrder.map((trait) {
+      final traitConclusion = profileData.traitsConclusions[trait];
+      final double percentage = (traitConclusion != null) ? (traitConclusion.overallPercentage * 100) : 0.0;
+      final String desc = traitConclusion?.conclusion ?? 'Sin análisis disponible para este rasgo.';
+      final String lvl = traitConclusion?.level.toUpperCase() ?? 'MEDIO';
+
+      return _TraitScore(
+        key: trait,
+        label: _traitLabelsEs[trait] ?? trait,
+        value: percentage.clamp(0.0, 100.0),
+        description: desc,
+        level: lvl,
+      );
+    }).toList();
+  }
+
+  List<_TraitScore> _buildAssessmentTraitScores(PredictionResult? assessment) {
+    if (assessment == null) {
+      return _buildProfileTraitScores(_getEmptyFallbackProfile());
+    }
+
+    return _traitOrder.map((trait) {
+      final raw = _resolveTraitValue(assessment.personalityPrediction, trait);
+      final value = _normalizeToPercent(raw);
+      final desc = _resolveTraitDescription(assessment.traitDescriptions, trait) ?? 'Evaluación recién procesada.';
+      final level = _levelFromPercent(value);
+
+      return _TraitScore(
+        key: trait,
+        label: _traitLabelsEs[trait] ?? trait,
+        value: value,
+        description: desc,
+        level: level,
+      );
+    }).toList();
+  }
+
+  _LiveRadarData _buildLiveRadar(PredictionResult? assessment) {
+    if (assessment == null) {
+      return const _LiveRadarData(
+        title: 'Distribución de rasgos',
+        labels: _traitOrder,
+        initialData: [50, 50, 50, 50, 50],
+        currentData: [50, 50, 50, 50, 50],
+      );
+    }
+
+    final graphics = assessment.graphicsData;
+    final radar = graphics['comparison_radar_chart'];
+    if (radar is Map<String, dynamic>) {
+      final labels = List<String>.from(radar['labels'] ?? _traitOrder);
+      final datasets = radar['datasets'] as List<dynamic>? ?? [];
+      List<double> initial = [];
+      List<double> current = [];
+
+      if (datasets.isNotEmpty) {
+        initial = List<double>.from(
+          ((datasets.first as Map<String, dynamic>)['data'] as List<dynamic>? ?? [])
+              .map((e) => double.tryParse(e.toString()) ?? 0.0),
+        );
+      }
+      if (datasets.length > 1) {
+        current = List<double>.from(
+          ((datasets[1] as Map<String, dynamic>)['data'] as List<dynamic>? ?? [])
+              .map((e) => double.tryParse(e.toString()) ?? 0.0),
+        );
+      }
+
+      if (current.isNotEmpty) {
+        return _LiveRadarData(
+          title: (radar['title'] ?? 'Distribución de rasgos').toString(),
+          labels: labels,
+          initialData: initial.isNotEmpty ? initial : List.filled(current.length, 50),
+          currentData: current,
+        );
+      }
+    }
+
+    final currentData = _traitOrder
+      .map((trait) => _normalizeToPercent(_resolveTraitValue(assessment.personalityPrediction, trait)))
+        .toList();
+
+    return _LiveRadarData(
+      title: 'Distribución de rasgos',
+      labels: _traitOrder,
+      initialData: List.filled(currentData.length, 50),
+      currentData: currentData,
+    );
+  }
+
+  double _normalizeToPercent(double raw) {
+    if (raw <= 1.0) return (raw * 100).clamp(0.0, 100.0);
+    if (raw <= 5.0) return ((raw - 1.0) / 4.0 * 100).clamp(0.0, 100.0);
+    if (raw <= 10.0) return (raw * 10).clamp(0.0, 100.0);
+    return raw.clamp(0.0, 100.0);
+  }
+
+  double _resolveTraitValue(Map<String, double> values, String trait) {
+    if (values.containsKey(trait)) {
+      return values[trait] ?? 0.0;
+    }
+
+    final normalizedMap = <String, double>{};
+    values.forEach((key, value) {
+      normalizedMap[_normalizeKey(key)] = value;
+    });
+
+    final aliases = _traitAliases[trait] ?? const <String>[];
+    for (final alias in aliases) {
+      final match = normalizedMap[_normalizeKey(alias)];
+      if (match != null) return match;
+    }
+
+    final traitNorm = _normalizeKey(trait);
+    for (final entry in normalizedMap.entries) {
+      if (entry.key.contains(traitNorm) || traitNorm.contains(entry.key)) {
+        return entry.value;
+      }
+    }
+
+    return 0.0;
+  }
+
+  String? _resolveTraitDescription(Map<String, String> descriptions, String trait) {
+    if (descriptions.containsKey(trait)) {
+      return descriptions[trait];
+    }
+
+    final normalizedMap = <String, String>{};
+    descriptions.forEach((key, value) {
+      normalizedMap[_normalizeKey(key)] = value;
+    });
+
+    final aliases = _traitAliases[trait] ?? const <String>[];
+    for (final alias in aliases) {
+      final match = normalizedMap[_normalizeKey(alias)];
+      if (match != null && match.trim().isNotEmpty) return match;
+    }
+
+    return null;
+  }
+
+  String _normalizeKey(String input) {
+    return input.toLowerCase().replaceAll(RegExp(r'[^a-z]'), '');
+  }
+
+  String _levelFromPercent(double value) {
+    if (value >= 67) return 'ALTO';
+    if (value >= 34) return 'MEDIO';
+    return 'BAJO';
+  }
 }
 
 class _TraitScore {
@@ -347,7 +526,11 @@ class _DualRadarChartPainter extends CustomPainter {
       for (var i = 0; i < labels.length; i++) {
         final angle = -math.pi / 2 + i * angleStep;
         final point = Offset(center.dx + radius * math.cos(angle), center.dy + radius * math.sin(angle));
-        if (i == 0) path.moveTo(point.dx, point.dy); else path.lineTo(point.dx, point.dy);
+        if (i == 0) {
+          path.moveTo(point.dx, point.dy);
+        } else {
+          path.lineTo(point.dx, point.dy);
+        }
       }
       path.close();
       canvas.drawPath(path, gridPaint);
@@ -369,8 +552,8 @@ class _DualRadarChartPainter extends CustomPainter {
       ));
     }
 
-    _drawPolygon(canvas, center, maxRadius, angleStep, initialDataset, const Color(0xFF94A3B8).withOpacity(0.15), const Color(0xFF94A3B8));
-    _drawPolygon(canvas, center, maxRadius, angleStep, currentDataset, const Color(0xFF142175).withOpacity(0.18), const Color(0xFF142175));
+    _drawPolygon(canvas, center, maxRadius, angleStep, initialDataset, const Color(0xFF94A3B8).withValues(alpha: 0.15), const Color(0xFF94A3B8));
+    _drawPolygon(canvas, center, maxRadius, angleStep, currentDataset, const Color(0xFF142175).withValues(alpha: 0.18), const Color(0xFF142175));
   }
 
   void _drawPolygon(Canvas canvas, Offset center, double maxRadius, double angleStep, List<double> dataset, Color fill, Color stroke) {
@@ -379,7 +562,11 @@ class _DualRadarChartPainter extends CustomPainter {
       final radius = maxRadius * ((dataset[i] / 100).clamp(0.0, 1.0));
       final angle = -math.pi / 2 + i * angleStep;
       final p = Offset(center.dx + radius * math.cos(angle), center.dy + radius * math.sin(angle));
-      if (i == 0) path.moveTo(p.dx, p.dy); else path.lineTo(p.dx, p.dy);
+      if (i == 0) {
+        path.moveTo(p.dx, p.dy);
+      } else {
+        path.lineTo(p.dx, p.dy);
+      }
     }
     path.close();
     canvas.drawPath(path, Paint()..color = fill..style = PaintingStyle.fill);
@@ -388,4 +575,18 @@ class _DualRadarChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _DualRadarChartPainter oldDelegate) => true;
+}
+
+class _LiveRadarData {
+  final String title;
+  final List<String> labels;
+  final List<double> initialData;
+  final List<double> currentData;
+
+  const _LiveRadarData({
+    required this.title,
+    required this.labels,
+    required this.initialData,
+    required this.currentData,
+  });
 }

@@ -113,13 +113,13 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> updateProfile(int age, String occupation) async {
+  Future<bool> updateProfile(String username, String email, int age, String occupation) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
-      currentUser = await updateProfileUseCase(age, occupation);
+      currentUser = await updateProfileUseCase(username, email, age, occupation);
       isLoading = false;
       notifyListeners();
       return true;

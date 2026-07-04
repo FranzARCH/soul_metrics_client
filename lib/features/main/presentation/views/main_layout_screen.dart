@@ -8,14 +8,16 @@ import '../../../history_results/presentation/views/history_screen.dart';
 import '../../../profile/presentation/views/profile_screen.dart';
 
 class MainLayoutScreen extends StatefulWidget {
-  const MainLayoutScreen({super.key});
+  final int initialIndex;
+
+  const MainLayoutScreen({super.key, this.initialIndex = 0});
 
   @override
   State<MainLayoutScreen> createState() => _MainLayoutScreenState();
 }
 
 class _MainLayoutScreenState extends State<MainLayoutScreen> {
-  int _currentIndex = 0;
+  late int _currentIndex;
 
   final List<Widget> _screens = const [
     HomeScreen(),
@@ -26,6 +28,12 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
 
   final Color primaryColor = const Color(0xFF142175);
   final Color secondaryColor = const Color(0xFF5a55a2);
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex.clamp(0, _screens.length - 1);
+  }
 
   @override
   Widget build(BuildContext context) {
