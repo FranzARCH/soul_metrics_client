@@ -7,6 +7,7 @@ import '../viewmodels/question_viewmodel.dart';
 import '../../domain/entities/prediction_result.dart';
 import '../../domain/entities/personality_profile.dart';
 import '../../../../injection_container.dart';
+import 'package:file_saver/file_saver.dart';
 
 class ResultsScreen extends StatelessWidget {
   const ResultsScreen({super.key});
@@ -182,21 +183,33 @@ class ResultsScreen extends StatelessWidget {
     
     if (!context.mounted) return;
     
-    if (pdfBytes != null) {
-      // Show success message with option to download/share
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('PDF generado correctamente. Tamaño: '),
-          action: SnackBarAction(
-            label: 'Guardar',
-            onPressed: () {
-              // For web, we would use html anchor download
-              // For mobile, we would use path_provider to save the file
-              // This is a placeholder - you may need to add file_saver or similar package
-            },
+    if (pdfBytes != null && pdfBytes.isNotEmpty) {
+      try {
+        // 1. Guardamos el archivo usando file_saver
+        final String fileName = "reporte_personalidad_${DateTime.now().millisecondsSinceEpoch}";
+        
+        await FileSaver.instance.saveFile(
+          name: fileName,
+          bytes: pdfBytes,
+          ext: "pdf",
+          mimeType: MimeType.pdf,
+        );
+
+        // 2. Mostramos el mensaje de éxito
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('¡PDF descargado con éxito! (${(pdfBytes.length / 1024).toStringAsFixed(1)} KB)'),
+            backgroundColor: Colors.green,
           ),
-        ),
-      );
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al guardar el archivo: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     } else if (viewModel.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
