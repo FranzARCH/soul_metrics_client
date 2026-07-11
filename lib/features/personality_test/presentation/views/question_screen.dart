@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/question_viewmodel.dart';
-import '../../../main/presentation/views/main_layout_screen.dart';
+import 'package:go_router/go_router.dart'; // <--- Importación asegurada
 
 class QuestionScreen extends StatefulWidget {
   const QuestionScreen({super.key});
@@ -40,7 +40,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
         ),
         actions: [
           TextButton.icon(
-            onPressed: () => Navigator.pop(context),
+            // SOLUCIÓN: Cambiado a context.pop() nativo de GoRouter
+            onPressed: () => context.pop(),
             icon: const Icon(Icons.close, size: 18, color: Color(0xFF767682)),
             label: const Text('Salir', style: TextStyle(color: Color(0xFF767682))),
           )
@@ -62,9 +63,14 @@ class _QuestionScreenState extends State<QuestionScreen> {
     if (viewModel.questions.isEmpty) return const SizedBox.shrink();
 
     final currentQuestion = viewModel.questions[viewModel.currentIndex];
-    final progressFraction = (viewModel.currentIndex) / viewModel.questions.length;
-    final progressPercentage = (progressFraction * 100).toInt();
     final selectedValue = viewModel.answers[currentQuestion.code];
+
+    // SOLUCIÓN: El progreso ahora se calcula basándose en respuestas reales almacenadas
+    final totalQuestions = viewModel.questions.length;
+    final answeredCount = viewModel.answers.values.where((answer) => answer != null).length;
+    
+    final progressFraction = totalQuestions > 0 ? (answeredCount / totalQuestions) : 0.0;
+    final progressPercentage = (progressFraction * 100).toInt();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24.0),
@@ -77,7 +83,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Pregunta ${viewModel.currentIndex + 1} de ${viewModel.questions.length}',
+                    'Pregunta ${viewModel.currentIndex + 1} de $totalQuestions',
                     style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
                   ),
                   Text('$progressPercentage% completado', style: const TextStyle(color: Color(0xFF767682))),
@@ -159,16 +165,15 @@ class _QuestionScreenState extends State<QuestionScreen> {
                     onPressed: selectedValue == null
                         ? null
                         : () async {
-                            if (viewModel.currentIndex < viewModel.questions.length - 1) {
+                            if (viewModel.currentIndex < totalQuestions - 1) {
                               viewModel.nextQuestion();
                             } else {
                               _showProcessingDialog(context);
                               final success = await viewModel.sendAssessment();
                               if (!mounted) return;
-                              Navigator.pop(context); // Cierra cargando
+                              context.pop(); // Cierra cargando de forma segura con GoRouter
 
                               if (success && viewModel.result != null) {
-                                // 🚀 REQUERIMIENTO: Mostrar modal con el diagnóstico inmediato del último quiz
                                 _showImmediateResultModal(context, viewModel.result!);
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -185,7 +190,7 @@ class _QuestionScreenState extends State<QuestionScreen> {
                     ),
                     child: Row(
                       children: [
-                        Text(viewModel.currentIndex == viewModel.questions.length - 1 ? 'Finalizar' : 'Siguiente'),
+                        Text(viewModel.currentIndex == totalQuestions - 1 ? 'Finalizar' : 'Siguiente'),
                         const SizedBox(width: 8),
                         const Icon(Icons.arrow_forward, size: 18),
                       ],
@@ -345,8 +350,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
-                        Navigator.pop(modalContext);
-                        Navigator.pop(context);
+                        context.pop(); // Cierra modal flotante
+                        context.pop(); // Regresa a la vista anterior a la evaluación limpia
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: primaryColor,
@@ -366,12 +371,8 @@ class _QuestionScreenState extends State<QuestionScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       onPressed: () {
-                        Navigator.of(modalContext).pushAndRemoveUntil(
-                          MaterialPageRoute(
-                            builder: (_) => const MainLayoutScreen(initialIndex: 1),
-                          ),
-                          (route) => false,
-                        );
+                        context.pop(); // Cierra el modal de forma limpia
+                        context.go('/results'); // Redirige directamente a la pestaña global de resultados
                       },
                       child: const Text('Ver resultados'),
                     ),

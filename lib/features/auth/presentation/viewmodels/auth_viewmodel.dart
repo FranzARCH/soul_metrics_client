@@ -22,12 +22,15 @@ class AuthViewModel extends ChangeNotifier {
     required this.updateProfileUseCase,
     required this.logoutUseCase,
     required this.restoreSessionUseCase,
-  });
+  }) {
+    // CRÍTICO: Disparar de forma automática la recuperación del token al instanciar el ViewModel
+    restoreSession();
+  }
 
   bool isLoading = false;
-  bool isBootstrapping = false;
+  bool isBootstrapping = true; // Empieza en true para que go_router sepa que estamos verificando el disco local
   String? errorMessage;
-  User? currentUser;
+  User? currentUser; // Si usas UserEntity, cámbialo aquí para consistencia
 
   bool get isAuthenticated => currentUser != null;
 
@@ -42,7 +45,7 @@ class AuthViewModel extends ChangeNotifier {
         currentUser = await getProfileUseCase();
       }
       isBootstrapping = false;
-      notifyListeners();
+      notifyListeners(); // go_router capturará esta notificación y reevaluará el redirect
       return restored;
     } catch (_) {
       currentUser = null;

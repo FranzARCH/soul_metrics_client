@@ -1,58 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
-import '../../../auth/presentation/views/login_screen.dart';
-import '../../../main/presentation/views/home_screen.dart';
-import '../../../personality_test/presentation/views/results_screen.dart';
-import '../../../history_results/presentation/views/history_screen.dart';
-import '../../../profile/presentation/views/profile_screen.dart';
+import 'package:go_router/go_router.dart';
 
-class MainLayoutScreen extends StatefulWidget {
-  final int initialIndex;
+class MainLayoutScreen extends StatelessWidget {
+  final StatefulNavigationShell navigationShell;
 
-  const MainLayoutScreen({super.key, this.initialIndex = 0});
-
-  @override
-  State<MainLayoutScreen> createState() => _MainLayoutScreenState();
-}
-
-class _MainLayoutScreenState extends State<MainLayoutScreen> {
-  late int _currentIndex;
-
-  final List<Widget> _screens = const [
-    HomeScreen(),
-    ResultsScreen(), 
-    HistoryScreen(),
-    ProfileScreen(),
-  ];
+  const MainLayoutScreen({super.key, required this.navigationShell});
 
   final Color primaryColor = const Color(0xFF142175);
   final Color secondaryColor = const Color(0xFF5a55a2);
 
-  @override
-  void initState() {
-    super.initState();
-    _currentIndex = widget.initialIndex.clamp(0, _screens.length - 1);
+  // Método para manejar el cambio de pestaña y URL
+  void _onTap(int index) {
+    navigationShell.goBranch(
+      index,
+      // Mantiene el estado de la pestaña si el usuario hace clic de nuevo
+      initialLocation: index == navigationShell.currentIndex,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final authVm = context.watch<AuthViewModel>();
-
-    if (!authVm.isBootstrapping && !authVm.isAuthenticated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()),
-          (route) => false,
-        );
-      });
-    }
+    // Nota: Removimos la validación manual del AuthViewModel de aquí,
+    // ya que ahora el router centralizado (`redirect`) maneja la seguridad de rutas de forma nativa.
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      // Top bar
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -73,20 +45,15 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
             ),
           )
         ],
-        // Línea sutil debajo del AppBar
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
           child: Container(color: const Color(0xFFC6C5D3).withValues(alpha: 0.3), height: 1.0),
         ),
       ),
       
-      // Main content
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      // El cuerpo ahora es directamente la rama del Shell (actúa idéntico a IndexedStack de forma interna)
+      body: navigationShell,
 
-      // Bottom menu bar
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -98,8 +65,8 @@ class _MainLayoutScreenState extends State<MainLayoutScreen> {
           ],
         ),
         child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
+          currentIndex: navigationShell.currentIndex, // Sincronizado con la ruta web
+          onTap: _onTap,
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
           selectedItemColor: secondaryColor,

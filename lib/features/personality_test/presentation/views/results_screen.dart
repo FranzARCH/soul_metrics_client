@@ -91,9 +91,8 @@ class ResultsScreen extends StatelessWidget {
             backgroundColor: const Color(0xFFF8F9FA),
             appBar: AppBar(
               backgroundColor: Colors.transparent,
-              elevation: 0,
               title: Text(
-                hasRealData || hasAssessmentResult ? 'Tu Perfil de Personalidad' : 'Visualización de Reporte',
+                hasRealData || hasAssessmentResult ? 'Evaluación Completada' : 'Ejemplo de Visualización',
                 style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 18),
               ),
               actions: [
@@ -123,11 +122,6 @@ class ResultsScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      hasRealData || hasAssessmentResult ? 'Evaluación Completada' : 'Demostración de Resultados', 
-                      style: TextStyle(color: secondaryColor, fontWeight: FontWeight.w600, fontSize: 12),
-                    ),
-                    const SizedBox(height: 8),
                     Text(
                       hasRealData || hasAssessmentResult ? 'Tu Perfil de Personalidad' : 'Visualización de Reporte', 
                       style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: primaryColor),

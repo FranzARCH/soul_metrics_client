@@ -4,7 +4,7 @@ import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../../history_results/domain/entities/history_item.dart';
 import '../../../history_results/presentation/viewmodels/history_viewmodel.dart';
 import '../../../personality_test/presentation/viewmodels/profile_viewmodel.dart';
-import '../../../personality_test/presentation/views/question_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -95,10 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       ElevatedButton.icon(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const QuestionScreen()),
-                          );
+                          context.go('/test');
                         },
                         icon: const Icon(Icons.arrow_forward, size: 18),
                         label: const Text('Iniciar Evaluación'),

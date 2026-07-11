@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../../../main/presentation/views/main_layout_screen.dart';
 import 'register_screen.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -137,10 +138,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                                 // 3. Validamos el contexto de nuevo tras el delay y redirigimos
                                 if (!context.mounted) return;
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => const MainLayoutScreen()),
-                                );
+                                
+                                context.go('/');
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
@@ -172,7 +171,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text('¿No tienes una cuenta? '),
                     GestureDetector(
                       onTap: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterScreen()));
+                        context.push('/register');
                       },
                       child: Text('Regístrate ahora', style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
                     )
