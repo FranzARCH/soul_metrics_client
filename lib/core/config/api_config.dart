@@ -3,6 +3,6 @@ class ApiConfig {
 
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'https://soulmetrics.onrender.com',
+    defaultValue: 'https://soulmetrics-0ndv.onrender.com',
   );
 }

@@ -185,7 +185,6 @@ class ResultsScreen extends StatelessWidget {
         await FileSaver.instance.saveFile(
           name: fileName,
           bytes: pdfBytes,
-          ext: "pdf",
           mimeType: MimeType.pdf,
         );
 
